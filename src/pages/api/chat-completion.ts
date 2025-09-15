@@ -53,7 +53,8 @@ const handler = async (req: Request): Promise<Response> => {
       apiUrl = `${apiBaseUrl}/v1/chat/completions`
       apiKey = process.env.OPENAI_API_KEY || ''
       headers['Authorization'] = `Bearer ${apiKey}`
-      model = 'gpt-3.5-turbo'
+      // CHANGED: Use GPT-4o-mini (the current cheapest OpenAI model)
+      model = 'gpt-4o-mini'
     }
 
     const stream = await OpenAIStream(apiUrl, headers, model, messagesToSend)
@@ -73,7 +74,7 @@ const OpenAIStream = async (apiUrl: string, headers: Record<string, string>, mod
     headers: headers,
     method: 'POST',
     body: JSON.stringify({
-      model: model,
+      model: model, // This will now be 'gpt-4o-mini'
       frequency_penalty: 0,
       max_tokens: 4000,
       messages: [
