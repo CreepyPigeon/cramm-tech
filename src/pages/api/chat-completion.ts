@@ -30,6 +30,10 @@ const handler = async (req: Request): Promise<Response> => {
     let apiUrl: string
     let apiKey: string
     let model: string
+    let headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+
     if (useAzureOpenAI) {
       let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
       const version = '2024-02-01'
@@ -39,7 +43,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
       apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
       apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-      model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
+      headers['api-key'] = apiKey
+      model = ''
     } else {
       let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
       if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
@@ -47,9 +52,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
       apiUrl = `${apiBaseUrl}/v1/chat/completions`
       apiKey = process.env.OPENAI_API_KEY || ''
-      model = 'gpt-3.5-turbo' // todo: allow this to be passed through from client and support gpt-4
+      headers['Authorization'] = `Bearer ${apiKey}`
+      model = 'gpt-3.5-turbo'
     }
-    const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend)
+
+    const stream = await OpenAIStream(apiUrl, headers, model, messagesToSend)
 
     return new Response(stream)
   } catch (error) {
@@ -58,15 +65,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 }
 
-const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messages: Message[]) => {
+const OpenAIStream = async (apiUrl: string, headers: Record<string, string>, model: string, messages: Message[]) => {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
+  
   const res = await fetch(apiUrl, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'api-key': `${apiKey}`
-    },
+    headers: headers,
     method: 'POST',
     body: JSON.stringify({
       model: model,
@@ -88,6 +92,8 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
 
   if (res.status !== 200) {
     const statusText = res.statusText
+    const errorBody = await res.text()
+    console.error('OpenAI API Error:', errorBody)
     throw new Error(
       `The OpenAI API has encountered an error with a status code of ${res.status} and message ${statusText}`
     )
@@ -107,8 +113,10 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
           try {
             const json = JSON.parse(data)
             const text = json.choices[0]?.delta.content
-            const queue = encoder.encode(text)
-            controller.enqueue(queue)
+            if (text) {
+              const queue = encoder.encode(text)
+              controller.enqueue(queue)
+            }
           } catch (e) {
             controller.error(e)
           }
@@ -118,10 +126,11 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
       const parser = createParser(onParse)
 
       for await (const chunk of res.body as any) {
-        const str = decoder.decode(chunk).replace('[DONE]\n', '[DONE]\n\n')
+        const str = decoder.decode(chunk)
         parser.feed(str)
       }
     }
   })
 }
+
 export default handler
