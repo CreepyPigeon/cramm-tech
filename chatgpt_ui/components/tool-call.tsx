@@ -25,7 +25,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
             </div>
           </div>
 
-          {/* <div className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2">
+          <div className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2">
             <div className="max-h-96 overflow-y-scroll text-xs border-b mx-6 p-2">
               <SyntaxHighlighter
                 customStyle={{
@@ -61,7 +61,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                 </div>
               )}
             </div>
-          </div> */}
+          </div>
         </div>
       </div>
     </div>
