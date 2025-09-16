@@ -41,6 +41,13 @@ export const generate_report = async ({
   return res;
 };
 
+export const analyze_report = async ({ file_path }: { file_path: string }) => {
+  const res = await fetch("http://127.0.0.1:5000/reports-summary/" + file_path)
+
+  if (!res.ok) throw new Error("Failed to fetch report analysis");
+  return res.json();
+}
+
 // export const read_file = async ({ file_path }: { file_path: string }) => {
 //   const res = await fetch("http://127.0.0.1:5000/reports/" + file_path).then(
 //     (res) => {
@@ -65,5 +72,6 @@ export const functionsMap = {
   // get_weather: get_weather,
   // get_joke: get_joke,
   generate_report: generate_report,
+  analyze_report: analyze_report,
   // read_file: read_file
 };

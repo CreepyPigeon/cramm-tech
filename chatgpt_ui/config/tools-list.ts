@@ -10,7 +10,7 @@ export const toolsList = [
       currency: {
         type: "string",
         description: "Currency to generate report in",
-        enum: ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD", "ZAR"],
+        enum: ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD", "ZAR", "USD"],
       },
       year: {
         type: "integer",
@@ -18,6 +18,16 @@ export const toolsList = [
       }
     },
   },
+  {
+    name: "analyze_report",
+    description: "Analyze a previously generated report and provide insights and recommendations based on its content (eg. https://localhost:5000/reports/filename)",
+    parameters: {
+      file_path: {
+        type: "string",
+        description: "Path to the report file to analyze (should only be a filename, no paths or directories or urls. e.g., report.xlsx)",
+      }
+    },
+  }
   // {
   //   name: "read_file",
   //   description: "Read a file from localhost:5000 reports directory (eg. https://localhost:5000/reports/filename)",
