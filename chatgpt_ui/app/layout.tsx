@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Responses starter app",
-  description: "Starter app for the OpenAI Responses API",
+  title: "Banking AI Agent",
+  description: "It can generate reports and analyze them for you.",
   icons: {
     icon: "/openai_logo.svg",
   },
