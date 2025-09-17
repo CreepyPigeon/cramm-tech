@@ -1,10 +1,12 @@
 import pandas as pd
-from xlrd import open_workbook
 from openpyxl import load_workbook
 import uuid
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+def read_df():
+    return pd.read_csv('WS_DER_OTC_TOV_csv_col.csv')
 
 def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom = {}
@@ -123,6 +125,9 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
 
     return datesfrom
 
+def xlsx_to_csv(filename):
+    df = pd.read_excel(filename)
+    return df.to_csv(index=False)
 
 def prepare_report(df, currency_pair=("USD", "AUD")):
     data = {}
@@ -141,9 +146,7 @@ def prepare_report(df, currency_pair=("USD", "AUD")):
 
     return data
 
-
-def generate_report(currency="USD", year="2022"):
-    dataset = pd.read_csv('WS_DER_OTC_TOV_csv_col.csv')
+def generate_report(dataset, currency="USD", year="2022"):
     wb = load_workbook("Template_Datathon.xlsx")
     sheet = wb['A2']
     errors = []
@@ -152,231 +155,231 @@ def generate_report(currency="USD", year="2022"):
     for index, currency2 in enumerate(currencies):
         report_column = prepare_report(dataset, (currency, currency2))
         
-        # sheet.cell(9, 4 + index, report_column["Spot"]["total"][year].sum())
+        # sheet.cell(9, 4 + index, report_column["Spot"]["total"][str(year)].sum())
         i = 10
-        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_non_reporting"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_non_reporting"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_inst_investor"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_inst_investor"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_hedge"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_hedge"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_official"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_official"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_others"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_others"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_undistributed"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_undistributed"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["total"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["total"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Spot"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Spot"]["broke_retail"][str(year)].sum())
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_non_reporting"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_non_reporting"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_inst_investor"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_inst_investor"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_hedge"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_hedge"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_official"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_official"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_others"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_others"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_undistributed"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_undistributed"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["total"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["total"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_retail"][str(year)].sum())
         i = i + 1
-        # sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_del_forwards"][year].sum())
+        # sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_del_forwards"][str(year)].sum())
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_day"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_day"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_up_to_seven"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_up_to_seven"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_seven_up_to_month"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_seven_up_to_month"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_month_up_to_three"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_month_up_to_three"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_three_month_up_to_six"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_three_month_up_to_six"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_over_six_months"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_over_six_months"][str(year)].sum())
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_non_reporting"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_non_reporting"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_inst_investor"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_inst_investor"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_hedge"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_hedge"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_official"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_official"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_others"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_others"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_undistributed"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_undistributed"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["total"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["total"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_retail"][str(year)].sum())
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_day"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_day"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_up_to_seven"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_up_to_seven"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_seven_up_to_month"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_seven_up_to_month"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_month_up_to_three"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_month_up_to_three"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_three_month_up_to_six"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_three_month_up_to_six"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_over_six_months"][year].sum())
+        sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_over_six_months"][str(year)].sum())
 
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_non_reporting"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_non_reporting"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_inst_investor"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_inst_investor"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_hedge"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_hedge"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_official"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_official"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_others"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_others"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_undistributed"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_undistributed"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["total"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["total"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_retail"][str(year)].sum())
 
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_non_reporting"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_non_reporting"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_inst_investor"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_inst_investor"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_hedge"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_hedge"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_official"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_official"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_others"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_others"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_undistributed"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["other_fin_undistributed"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["non_fin"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["non_fin"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["non_fin_local"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["non_fin_local"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["non_fin_cross_border"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["non_fin_cross_border"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["total"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["total"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Options"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Options"]["broke_retail"][str(year)].sum())
         i = i + 2
-        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_non_bank_ele"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_non_bank_ele"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_other"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_other"][str(year)].sum())
         i = i + 1
-        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_retail"][year].sum())
+        sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_retail"][str(year)].sum())
 
     report_name = f"reports/Report-{year}-{currency}-{generate_uuid()}.xlsx"
     wb.save(report_name)

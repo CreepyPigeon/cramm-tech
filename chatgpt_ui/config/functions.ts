@@ -48,6 +48,47 @@ export const analyze_report = async ({ file_path }: { file_path: string }) => {
   return res.json();
 }
 
+// export const fetch_from_datasource = async ({ year, currency }: { year: string, currency: string }) => {
+//   const res = await fetch("http://127.0.0.1:5000/fetch-data?" + new URLSearchParams({ year, currency }).toString())
+
+//   if (!res.ok) throw new Error("Failed to fetch data from datasource");
+
+//   return res.json();
+// }
+
+export const missing_percentage = async ({ year, currency }: { year: string, currency: string }) => {
+  const res = await fetch("http://127.0.0.1:5000/missing_percentage/fetch-data?" + new URLSearchParams({ year, currency }).toString())
+
+  if (!res.ok) throw new Error("Failed to fetch data from datasource");
+
+  return res.json();
+}
+
+export const upload_file = async ({ filename, content}: { filename: string, content: string }) => {
+  // Post to localhost:5000/upload
+  const res = await fetch(`http://127.0.0.1:5000/file-storage/${filename}`, {
+    method: "POST",
+    body: content,
+  })
+  if (!res.ok) throw new Error("Failed to upload file");
+  return res.json();
+}
+
+export const fetch_file = async ({ filename }: { filename: string }) => {
+  const res = await fetch(`http://127.0.0.1:5000/file-storage/${filename}`)
+  if (!res.ok) throw new Error("Failed to fetch file");
+
+  const blob = await res.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // export const read_file = async ({ file_path }: { file_path: string }) => {
 //   const res = await fetch("http://127.0.0.1:5000/reports/" + file_path).then(
 //     (res) => {
@@ -73,5 +114,8 @@ export const functionsMap = {
   // get_joke: get_joke,
   generate_report: generate_report,
   analyze_report: analyze_report,
-  // read_file: read_file
+  // fetch_from_datasource: fetch_from_datasource,
+  missing_percentage: missing_percentage,
+  upload_file: upload_file,
+  fetch_file: fetch_file,
 };
