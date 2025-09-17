@@ -8,11 +8,13 @@ def generate_uuid():
 def read_df():
     return pd.read_csv('WS_DER_OTC_TOV_csv_col.csv')
 
-def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
+def extract_fx_data(df, instrument="Spot", curr1='USD', curr2='AUD'):
     datesfrom = {}
 
-    # Unpack currency pair
-    curr1, curr2 = currency_pair
+    if isinstance(curr2, str):
+        curr2_filter = df["DER_CURR_LEG2"] == curr2
+    else:
+        curr2_filter = df["DER_CURR_LEG2"].isin(curr2)
 
     # Define base filter
     base_filter = (
@@ -20,18 +22,25 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
         (df["Instrument"] == instrument) &
         (df["Reporting country"] == "All countries (total)") &
         (df["DER_CURR_LEG1"] == curr1) &
-        (df["DER_CURR_LEG2"] == curr2)
+        curr2_filter &
+        (df["Basis"] == "Net - net")
     )
+
+    interest_data = df[base_filter]
 
     # Updated excluded sectors list
     excluded_sectors = [
         "Other financial institutions",
         "Reporting dealers",
+        "Other residual financial institutions",
         "Non-reporting banks",
         "Institutional investors",
+        "Prime brokered",
+        "Non-financial customers",
         "Hedge funds and proprietary trading firms",
         "Official sector financial institutions",
-        "Undistributed"
+        "Undistributed",
+        "Total (all counterparties)"
     ]
 
     # Execution methods for broke_non_bank_ele
@@ -56,7 +65,8 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom["reporting_dealers_cross_border"] = datesfrom["reporting_dealers"][
         datesfrom["reporting_dealers"]["Counterparty country"] == "Non-residents/Cross-border"
     ]
-
+    datesfrom["reporting_dealers"] = datesfrom["reporting_dealers"][datesfrom["reporting_dealers"]["Counterparty country"] == "All countries (total)"]
+    
     # Other financial institutions
     datesfrom["other_fin"] = df[base_filter & (df["Counterparty sector"] == "Other financial institutions")]
     datesfrom["other_fin_local"] = datesfrom["other_fin"][
@@ -65,6 +75,7 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom["other_fin_cross_border"] = datesfrom["other_fin"][
         datesfrom["other_fin"]["Counterparty country"] == "Non-residents/Cross-border"
     ]
+    datesfrom["other_fin"] = datesfrom["other_fin"][datesfrom["other_fin"]["Counterparty country"] == "All countries (total)"]
 
     # Non-reporting banks, institutional investors, hedge funds, official sector, others
     datesfrom["other_fin_non_reporting"] = df[base_filter & (df["Counterparty sector"] == "Non-reporting banks")]
@@ -73,9 +84,9 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom["other_fin_official"] = df[base_filter & (df["Counterparty sector"] == "Official sector financial institutions")]
 
     # "Others" category (not in excluded sectors)
-    datesfrom["other_fin_others"] = df[base_filter & (~df["Counterparty sector"].isin(excluded_sectors))]
-
-    datesfrom["other_fin_undistributed"] = df[base_filter & (df["Counterparty sector"] == "Undistributed")]
+    # datesfrom["other_fin_others"] = df[base_filter & (~df["Counterparty sector"].isin(excluded_sectors))]
+    datesfrom["other_fin_others"] = interest_data[interest_data["Counterparty sector"] == "Other residual financial institutions"]
+    datesfrom["other_fin_undistributed"] = df[base_filter & (df[base_filter] ["Counterparty sector"] == "Undistributed")]
 
     # Non-financial customers
     datesfrom["non_fin"] = df[base_filter & (df["Counterparty sector"] == "Non-financial customers")]
@@ -85,6 +96,10 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom["non_fin_cross_border"] = datesfrom["non_fin"][
         datesfrom["non_fin"]["Counterparty country"] == "Non-residents/Cross-border"
     ]
+    datesfrom["non_fin"] = datesfrom["non_fin"][datesfrom["non_fin"]["Counterparty country"] == "All countries (total)"]
+    datesfrom["total"] = datesfrom["total"][datesfrom["total"]["Counterparty sector"] == "Total (all counterparties)"]
+    datesfrom["total"] = datesfrom["total"][datesfrom["total"]["Counterparty country"] == "All countries (total)"]
+    datesfrom["total"] = datesfrom["total"][datesfrom["total"]["Maturity"] == "Total (all maturities)"]
 
     # Brokers / Retail
     datesfrom["broke_non_bank_ele"] = df[
@@ -104,7 +119,7 @@ def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
     datesfrom["maturity_one_day"] = df[base_filter & (df["Maturity"] == "One day")]
 
     datesfrom["maturity_one_up_to_seven"] = df[base_filter & (
-        (df["Maturity"] == "7 days or less")
+        (df["Maturity"] == "Over 1 day and less than 7 days")
     )]
 
     datesfrom["maturity_seven_up_to_month"] = df[base_filter & (
@@ -129,7 +144,7 @@ def xlsx_to_csv(filename):
     df = pd.read_excel(filename)
     return df.to_csv(index=False)
 
-def prepare_report(df, currency_pair=("USD", "AUD")):
+def prepare_report(df, curr1='USD', curr2='AUD'):
     data = {}
 
     instrument_types = [
@@ -142,19 +157,31 @@ def prepare_report(df, currency_pair=("USD", "AUD")):
     ]
 
     for instrument in instrument_types:
-        data[instrument] = extract_fx_data(df, instrument=instrument, currency_pair=currency_pair)
+        data[instrument] = extract_fx_data(df, instrument=instrument, curr1 = curr1, curr2 = curr2)
 
     return data
 
 def generate_report(dataset, currency="USD", year="2022"):
     wb = load_workbook("Template_Datathon.xlsx")
     sheet = wb['A2']
+    sheet.cell(7, 4, f'{currency} against')
+    sheet.cell(5, 2, f'(in millions of {currency})')
+    sheet.cell(4, 2, f'Turnover in nominal or notional principal amounts in April {year}')
     errors = []
-    
-    currencies = ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD", "ZAR"]
+
+    specific_currencies = ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK",
+                             "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD", "USD", "ZAR"]
+    specific_currencies = [c for c in specific_currencies if c != currency]
+    other_currencies = [c for c in dataset['DER_CURR_LEG2'].value_counts().index.tolist() if c not in specific_currencies and c != currency]
+
+    currencies = specific_currencies + [other_currencies]
     for index, currency2 in enumerate(currencies):
-        report_column = prepare_report(dataset, (currency, currency2))
-        
+        report_column = prepare_report(dataset, currency, currency2)
+
+        if type(currency2) is list:
+            sheet.cell(8, 4 + index, "Others")
+        else:
+            sheet.cell(8, 4 + index, currency2)
         # sheet.cell(9, 4 + index, report_column["Spot"]["total"][str(year)].sum())
         i = 10
         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers"][str(year)].sum())

@@ -1,0 +1,623 @@
+1a2
+> from xlrd import open_workbook
+8,11c9
+< def read_df():
+<     return pd.read_csv('WS_DER_OTC_TOV_csv_col.csv')
+< 
+< def extract_fx_data(df, instrument="Spot", currency_pair=("USD", "AUD")):
+---
+> def extract_fx_data(df, instrument="Spot", curr1='USD', curr2='AUD'):
+15c13,16
+<     curr1, curr2 = currency_pair
+---
+>     if isinstance(curr2, str):
+>         curr2_filter = df["DER_CURR_LEG2"] == curr2
+>     else:
+>         curr2_filter = df["DER_CURR_LEG2"].isin(curr2)
+23,24c24
+<         (df["DER_CURR_LEG2"] == curr2) &
+<         (df["Basis"] == "Net - net")
+---
+>         curr2_filter
+27,28d26
+<     interest_data = df[base_filter]
+< 
+33d30
+<         "Other residual financial institutions",
+36,37d32
+<         "Prime brokered",
+<         "Non-financial customers",
+40,41c35
+<         "Undistributed",
+<         "Total (all counterparties)"
+---
+>         "Undistributed"
+42a37,38
+>     #"Other financial institutions","Reporting dealers","Other financial institutions","Non-reporting banks","Institutional investors",
+>     # "Hedge funds and proprietary trading firms","Official sector financial institutions","Undistributed"
+59,61c55,59
+<     datesfrom["reporting_dealers"] = df[base_filter & (df["Counterparty sector"] == "Reporting dealers")]
+<     datesfrom["reporting_dealers_local"] = datesfrom["reporting_dealers"][
+<         datesfrom["reporting_dealers"]["Counterparty country"] == "Residents/Local"
+---
+>    # Reporting dealers (all countries total)
+>     datesfrom["reporting_dealers"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Reporting dealers") &
+>         (df["Counterparty country"] == "All countries (total)")
+63,64c61,66
+<     datesfrom["reporting_dealers_cross_border"] = datesfrom["reporting_dealers"][
+<         datesfrom["reporting_dealers"]["Counterparty country"] == "Non-residents/Cross-border"
+---
+> 
+>     # Reporting dealers - Residents/Local
+>     datesfrom["reporting_dealers_local"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Reporting dealers") &
+>         (df["Counterparty country"] == "Residents/Local")
+66,71c68,73
+<     datesfrom["reporting_dealers"] = datesfrom["reporting_dealers"][datesfrom["reporting_dealers"]["Counterparty country"] == "All countries (total)"]
+<     
+<     # Other financial institutions
+<     datesfrom["other_fin"] = df[base_filter & (df["Counterparty sector"] == "Other financial institutions")]
+<     datesfrom["other_fin_local"] = datesfrom["other_fin"][
+<         datesfrom["other_fin"]["Counterparty country"] == "Residents/Local"
+---
+> 
+>     # Reporting dealers - Non-residents/Cross-border
+>     datesfrom["reporting_dealers_cross_border"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Reporting dealers") &
+>         (df["Counterparty country"] == "Non-residents/Cross-border")
+73,74c75,94
+<     datesfrom["other_fin_cross_border"] = datesfrom["other_fin"][
+<         datesfrom["other_fin"]["Counterparty country"] == "Non-residents/Cross-border"
+---
+> 
+>     # Other financial institutions (all countries total)
+>     datesfrom["other_fin"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Other financial institutions") &
+>         (df["Counterparty country"] == "All countries (total)")
+>     ]
+> 
+>     # Other financial institutions - Residents/Local
+>     datesfrom["other_fin_local"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Other financial institutions") &
+>         (df["Counterparty country"] == "Residents/Local")
+>     ]
+> 
+>     # Other financial institutions - Non-residents/Cross-border
+>     datesfrom["other_fin_cross_border"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Other financial institutions") &
+>         (df["Counterparty country"] == "Non-residents/Cross-border")
+76d95
+<     datesfrom["other_fin"] = datesfrom["other_fin"][datesfrom["other_fin"]["Counterparty country"] == "All countries (total)"]
+85,87c104,106
+<     # datesfrom["other_fin_others"] = df[base_filter & (~df["Counterparty sector"].isin(excluded_sectors))]
+<     datesfrom["other_fin_others"] = interest_data[interest_data["Counterparty sector"] == "Other residual financial institutions"]
+<     datesfrom["other_fin_undistributed"] = df[base_filter & (df[base_filter] ["Counterparty sector"] == "Undistributed")]
+---
+>     datesfrom["other_fin_others"] = df[base_filter & (~df["Counterparty sector"].isin(excluded_sectors))]
+> 
+>     datesfrom["other_fin_undistributed"] = df[base_filter & (df["Counterparty sector"] == "Undistributed")]
+90,99c109,127
+<     datesfrom["non_fin"] = df[base_filter & (df["Counterparty sector"] == "Non-financial customers")]
+<     datesfrom["non_fin_local"] = datesfrom["non_fin"][
+<         datesfrom["non_fin"]["Counterparty country"] == "Residents/Local"
+<     ]
+<     datesfrom["non_fin_cross_border"] = datesfrom["non_fin"][
+<         datesfrom["non_fin"]["Counterparty country"] == "Non-residents/Cross-border"
+<     ]
+<     datesfrom["non_fin"] = datesfrom["non_fin"][datesfrom["non_fin"]["Counterparty country"] == "All countries (total)"]
+<     datesfrom["total"] = datesfrom["total"][datesfrom["total"]["Counterparty sector"] == "Total (all counterparties)"]
+<     datesfrom["total"] = datesfrom["total"][datesfrom["total"]["Counterparty country"] == "All countries (total)"]
+---
+>     datesfrom["non_fin"] = df[
+>     base_filter &
+>     (df["Counterparty sector"] == "Non-financial customers") &
+>     (df["Counterparty country"] == "All countries (total)")
+>     ]
+> 
+>     # Non-financial customers (only local residents)
+>     datesfrom["non_fin_local"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Non-financial customers") &
+>         (df["Counterparty country"] == "Residents/Local")
+>     ]
+> 
+>     # Non-financial customers (only cross-border)
+>     datesfrom["non_fin_cross_border"] = df[
+>         base_filter &
+>         (df["Counterparty sector"] == "Non-financial customers") &
+>         (df["Counterparty country"] == "Non-residents/Cross-border")
+>     ]
+140,142d167
+< def xlsx_to_csv(filename):
+<     df = pd.read_excel(filename)
+<     return df.to_csv(index=False)
+144c169
+< def prepare_report(df, currency_pair=("USD", "AUD")):
+---
+> def prepare_report(df,curr1='USD', curr2='AUD'):
+157c182
+<         data[instrument] = extract_fx_data(df, instrument=instrument, currency_pair=currency_pair)
+---
+>         data[instrument] = extract_fx_data(df, instrument=instrument, curr1 = curr1, curr2= curr2)
+161c186,188
+< def generate_report(dataset, currency="USD", year="2022"):
+---
+> 
+> def generate_report(currency="USD", year="2022"):
+>     dataset = pd.read_csv('WS_DER_OTC_TOV_csv_col.csv')
+166c193,206
+<     currencies = ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD", "ZAR"]
+---
+>     specific_currencies = ["AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PLN", "RUB", "SEK", "SGD", "TRY", "TWD","USD","ZAR"]
+>     specific_currencies = [c for c in specific_currencies if c != currency]
+>     other_currencies = [
+>     c for c in dataset['DER_CURR_LEG2'].value_counts().index.tolist()
+>     if c not in specific_currencies and c != currency]
+>     
+>     currencies = specific_currencies + [other_currencies]
+>     
+>     counter = 0
+>     
+>     # for c in specific_currencies:
+>     #     sheet.cell(8, 4 + counter, c)
+>     #     counter = counter + 1
+>     
+168c208
+<         report_column = prepare_report(dataset, (currency, currency2))
+---
+>         report_column = prepare_report(dataset, currency, currency2)
+170c210
+<         # sheet.cell(9, 4 + index, report_column["Spot"]["total"][str(year)].sum())
+---
+>         # sheet.cell(9, 4 + index, report_column["Spot"]["total"][year].sum())
+172c212
+<         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers"][year].sum())
+174c214
+<         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_local"][year].sum())
+176c216
+<         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["reporting_dealers_cross_border"][year].sum())
+178c218
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin"][year].sum())
+180c220
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_local"][year].sum())
+182c222
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_cross_border"][year].sum())
+184c224
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_non_reporting"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_non_reporting"][year].sum())
+186c226
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_inst_investor"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_inst_investor"][year].sum())
+188c228
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_hedge"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_hedge"][year].sum())
+190c230
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_official"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_official"][year].sum())
+192c232
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_others"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_others"][year].sum())
+194c234
+<         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_undistributed"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["other_fin_undistributed"][year].sum())
+196c236
+<         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin"][year].sum())
+198c238
+<         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_local"][year].sum())
+200c240
+<         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["non_fin_cross_border"][year].sum())
+202c242
+<         sheet.cell(i, 4 + index, report_column["Spot"]["total"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["total"][year].sum())
+204c244
+<         sheet.cell(i, 4 + index, report_column["Spot"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["broke_non_bank_ele"][year].sum())
+206c246
+<         sheet.cell(i, 4 + index, report_column["Spot"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["broke_other"][year].sum())
+208c248
+<         sheet.cell(i, 4 + index, report_column["Spot"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Spot"]["broke_retail"][year].sum())
+210c250
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers"][year].sum())
+212c252
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_local"][year].sum())
+214c254
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["reporting_dealers_cross_border"][year].sum())
+216c256
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin"][year].sum())
+218c258
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_local"][year].sum())
+220c260
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_cross_border"][year].sum())
+222c262
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_non_reporting"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_non_reporting"][year].sum())
+224c264
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_inst_investor"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_inst_investor"][year].sum())
+226c266
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_hedge"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_hedge"][year].sum())
+228c268
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_official"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_official"][year].sum())
+230c270
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_others"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_others"][year].sum())
+232c272
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_undistributed"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["other_fin_undistributed"][year].sum())
+234c274
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin"][year].sum())
+236c276
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_local"][year].sum())
+238c278
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_fin_cross_border"][year].sum())
+240c280
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["total"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["total"][year].sum())
+242c282
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_non_bank_ele"][year].sum())
+244c284
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_other"][year].sum())
+246c286
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["broke_retail"][year].sum())
+248c288
+<         # sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_del_forwards"][str(year)].sum())
+---
+>         # sheet.cell(i, 4 + index, report_column["Outright forwards"]["non_del_forwards"][year].sum())
+250c290
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_day"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_day"][year].sum())
+252c292
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_up_to_seven"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_one_up_to_seven"][year].sum())
+254c294
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_seven_up_to_month"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_seven_up_to_month"][year].sum())
+256c296
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_month_up_to_three"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_month_up_to_three"][year].sum())
+258c298
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_three_month_up_to_six"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_three_month_up_to_six"][year].sum())
+260c300
+<         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_over_six_months"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Outright forwards"]["maturity_over_six_months"][year].sum())
+262c302
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers"][year].sum())
+264c304
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_local"][year].sum())
+266c306
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["reporting_dealers_cross_border"][year].sum())
+268c308
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin"][year].sum())
+270c310
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_local"][year].sum())
+272c312
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_cross_border"][year].sum())
+274c314
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_non_reporting"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_non_reporting"][year].sum())
+276c316
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_inst_investor"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_inst_investor"][year].sum())
+278c318
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_hedge"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_hedge"][year].sum())
+280c320
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_official"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_official"][year].sum())
+282c322
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_others"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_others"][year].sum())
+284c324
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_undistributed"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["other_fin_undistributed"][year].sum())
+286c326
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin"][year].sum())
+288c328
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_local"][year].sum())
+290c330
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["non_fin_cross_border"][year].sum())
+292c332
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["total"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["total"][year].sum())
+294c334
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_non_bank_ele"][year].sum())
+296c336
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_other"][year].sum())
+298c338
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["broke_retail"][year].sum())
+300c340
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_day"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_day"][year].sum())
+302c342
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_up_to_seven"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_one_up_to_seven"][year].sum())
+304c344
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_seven_up_to_month"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_seven_up_to_month"][year].sum())
+306c346
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_month_up_to_three"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_month_up_to_three"][year].sum())
+308c348
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_three_month_up_to_six"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_three_month_up_to_six"][year].sum())
+310c350
+<         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_over_six_months"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["FX swaps"]["maturity_over_six_months"][year].sum())
+313c353
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers"][year].sum())
+315c355
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_local"][year].sum())
+317c357
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["reporting_dealers_cross_border"][year].sum())
+319c359
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin"][year].sum())
+321c361
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_local"][year].sum())
+323c363
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_cross_border"][year].sum())
+325c365
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_non_reporting"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_non_reporting"][year].sum())
+327c367
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_inst_investor"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_inst_investor"][year].sum())
+329c369
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_hedge"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_hedge"][year].sum())
+331c371
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_official"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_official"][year].sum())
+333c373
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_others"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_others"][year].sum())
+335c375
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_undistributed"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["other_fin_undistributed"][year].sum())
+337c377
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin"][year].sum())
+339c379
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_local"][year].sum())
+341c381
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["non_fin_cross_border"][year].sum())
+343c383
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["total"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["total"][year].sum())
+345c385
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_non_bank_ele"][year].sum())
+347c387
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_other"][year].sum())
+349c389
+<         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Currency swaps"]["broke_retail"][year].sum())
+352c392
+<         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers"][year].sum())
+354c394
+<         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_local"][year].sum())
+356c396
+<         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["reporting_dealers_cross_border"][year].sum())
+358c398
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin"][year].sum())
+360c400
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_local"][year].sum())
+362c402
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_cross_border"][year].sum())
+364c404
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_non_reporting"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_non_reporting"][year].sum())
+366c406
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_inst_investor"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_inst_investor"][year].sum())
+368c408
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_hedge"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_hedge"][year].sum())
+370c410
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_official"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_official"][year].sum())
+372c412
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_others"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_others"][year].sum())
+374c414
+<         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_undistributed"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["other_fin_undistributed"][year].sum())
+376c416
+<         sheet.cell(i, 4 + index, report_column["Options"]["non_fin"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["non_fin"][year].sum())
+378c418
+<         sheet.cell(i, 4 + index, report_column["Options"]["non_fin_local"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["non_fin_local"][year].sum())
+380c420
+<         sheet.cell(i, 4 + index, report_column["Options"]["non_fin_cross_border"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["non_fin_cross_border"][year].sum())
+382c422
+<         sheet.cell(i, 4 + index, report_column["Options"]["total"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["total"][year].sum())
+384c424
+<         sheet.cell(i, 4 + index, report_column["Options"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["broke_non_bank_ele"][year].sum())
+386c426
+<         sheet.cell(i, 4 + index, report_column["Options"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["broke_other"][year].sum())
+388c428
+<         sheet.cell(i, 4 + index, report_column["Options"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Options"]["broke_retail"][year].sum())
+390c430
+<         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_non_bank_ele"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_non_bank_ele"][year].sum())
+392c432
+<         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_other"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_other"][year].sum())
+394c434
+<         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_retail"][str(year)].sum())
+---
+>         sheet.cell(i, 4 + index, report_column["Total (all instruments)"]["broke_retail"][year].sum())
