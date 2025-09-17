@@ -113,3 +113,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+html, body {
+  font-size: 1.125rem;
+}

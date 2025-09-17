@@ -9,27 +9,27 @@ export default function Assistant() {
     useConversationStore();
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim()) return;
+  if (!message.trim()) return;
 
-    const userItem: Item = {
-      type: "message",
-      role: "user",
-      content: [{ type: "input_text", text: message.trim() }],
-    };
-    const userMessage: any = {
-      role: "user",
-      content: message.trim(),
-    };
-
-    try {
-      setAssistantLoading(true);
-      addConversationItem(userMessage);
-      addChatMessage(userItem);
-      await processMessages();
-    } catch (error) {
-      console.error("Error processing message:", error);
-    }
+  const userItem: Item = {
+    type: "message",
+    role: "user",
+    content: [{ type: "input_text", text: message.trim() }],
   };
+  const userMessage: any = {
+    role: "user",
+    content: message.trim(),
+  };
+
+  try {
+    setAssistantLoading(true);
+    addConversationItem(userMessage);
+    addChatMessage(userItem);
+    await processMessages();
+  } catch (error) {
+    console.error("Error processing message:", error);
+  }
+};
 
   const handleApprovalResponse = async (
     approve: boolean,

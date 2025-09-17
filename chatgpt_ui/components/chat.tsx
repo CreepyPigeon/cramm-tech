@@ -22,8 +22,9 @@ const Chat: React.FC<ChatProps> = ({
   onApprovalResponse,
 }) => {
   const itemsEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputMessageText, setinputMessageText] = useState<string>("");
-  // This state is used to provide better user experience for non-English IMEs such as Japanese
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isComposing, setIsComposing] = useState(false);
   const { isAssistantLoading } = useConversationStore();
 
@@ -35,12 +36,85 @@ const Chat: React.FC<ChatProps> = ({
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Enter" && !event.shiftKey && !isComposing) {
         event.preventDefault();
-        onSendMessage(inputMessageText);
-        setinputMessageText("");
+        handleSendMessage();
       }
     },
-    [onSendMessage, inputMessageText, isComposing]
+    [onSendMessage, inputMessageText, isComposing, selectedFiles]
   );
+
+  const handleSendMessage = async () => {
+    if (inputMessageText.trim() || selectedFiles.length > 0) {
+      // Upload files first if any are selected
+      if (selectedFiles.length > 0) {
+        try {
+          for (const file of selectedFiles) {
+            // Convert file to base64
+            const arrayBuffer = await file.arrayBuffer();
+            const base64Content = arrayBufferToBase64(arrayBuffer);
+            
+            // Upload file to your API
+            const uploadResponse = await fetch("/api/vector_stores/upload_file", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fileObject: {
+                  name: file.name,
+                  content: base64Content,
+                },
+              }),
+            });
+            
+            if (!uploadResponse.ok) {
+              throw new Error("Error uploading file");
+            }
+            
+            const uploadData = await uploadResponse.json();
+            console.log("File uploaded:", uploadData);
+          }
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("Error uploading files. Please try again.");
+          return;
+        }
+      }
+      
+      // Send the message (with or without files)
+      onSendMessage(inputMessageText);
+      setinputMessageText("");
+      setSelectedFiles([]);
+    }
+  };
+
+  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+    }
+    // Reset the input to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFileButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -48,7 +122,6 @@ const Chat: React.FC<ChatProps> = ({
 
   return (
     <div className="flex justify-center items-center size-full">
-      {/* <div className="flex grow flex-col h-full max-w-[750px] gap-2"> */}
       <div className="flex grow flex-col h-full gap-2">
         <div className="h-[90vh] overflow-y-scroll px-10 flex flex-col">
           <div className="mt-auto space-y-5 pt-4">
@@ -85,6 +158,28 @@ const Chat: React.FC<ChatProps> = ({
           <div className="flex items-center">
             <div className="flex w-full items-center pb-4 md:pb-1">
               <div className="flex w-full flex-col gap-1.5 rounded-[20px] p-2.5 pl-1.5 transition-colors bg-white border border-stone-200 shadow-sm">
+                {/* Selected files preview */}
+                {selectedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 px-3 pb-2">
+                    {selectedFiles.map((file, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-2 bg-blue-50 rounded-full px-3 py-1 text-xs"
+                      >
+                        <span className="max-w-[120px] truncate">
+                          {file.name}
+                        </span>
+                        <button 
+                          onClick={() => removeFile(index)}
+                          className="text-gray-500 hover:text-red-500"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex items-end gap-1.5 md:gap-2 pl-4">
                   <div className="flex min-w-0 flex-1 flex-col">
                     <textarea
@@ -101,22 +196,49 @@ const Chat: React.FC<ChatProps> = ({
                       onCompositionEnd={() => setIsComposing(false)}
                     />
                   </div>
+
+                  {/* File upload button */}
                   <button
-                    disabled={!inputMessageText}
+                    type="button"
+                    onClick={handleFileButtonClick}
+                    className="flex size-8 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+                    title="Attach files"
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      multiple
+                    />
+                  </button>
+
+                  {/* Send button */}
+                  <button
+                    disabled={!inputMessageText && selectedFiles.length === 0}
                     data-testid="send-button"
-                    className="flex size-8 items-end justify-center rounded-full bg-black text-white transition-colors hover:opacity-70 focus-visible:outline-none focus-visible:outline-black disabled:bg-[#D7D7D7] disabled:text-[#f4f4f4] disabled:hover:opacity-100"
-                  onClick={() => {
-                      onSendMessage(inputMessageText);
-                      setinputMessageText("");
-                    }}
+                    className="flex size-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:opacity-70 focus-visible:outline-none focus-visible:outline-black disabled:bg-[#D7D7D7] disabled:text-[#f4f4f4] disabled:hover:opacity-100"
+                    onClick={handleSendMessage}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
+                      width="20"
+                      height="20"
                       fill="none"
                       viewBox="0 0 32 32"
-                      className="icon-2xl"
                     >
                       <path
                         fill="currentColor"
